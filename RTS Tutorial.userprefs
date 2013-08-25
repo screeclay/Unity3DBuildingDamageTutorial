@@ -1,0 +1,45 @@
+﻿<Properties>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\RTS\Verticle.cs">
+    <Files>
+      <File FileName="Assets\WorldObject\Building\MeshManager.cs" Line="89" Column="1" />
+      <File FileName="Assets\RTS\Verticle.cs" Line="77" Column="19" />
+      <File FileName="Assets\WorldObject\Building\Building.cs" Line="181" Column="24" />
+      <File FileName="Assets\RTS\WorkManager.cs" Line="52" Column="40" />
+      <File FileName="Assets\RTS\Enums.cs" Line="4" Column="1" />
+    </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State expanded="True">
+          <Node name="Assembly-CSharp" expanded="True">
+            <Node name="Assets" expanded="True">
+              <Node name="Player" expanded="True">
+                <Node name="SelectRectangle" expanded="True" />
+              </Node>
+              <Node name="RTS" expanded="True" />
+              <Node name="WorldObject" expanded="True">
+                <Node name="Building" expanded="True">
+                  <Node name="WarFactory" selected="True" />
+                </Node>
+              </Node>
+            </Node>
+          </Node>
+        </State>
+      </Pad>
+      <Pad Id="ClassPad">
+        <State expanded="True" selected="True" />
+      </Pad>
+      <Pad Id="MonoDevelop.Debugger.WatchPad">
+        <State />
+      </Pad>
+    </Pads>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore>
+      <Breakpoint enabled="false" file="D:\Flying\RTS13\RTS Tutorial\Assets\WorldObject\Building\Building.cs" line="174" />
+    </BreakpointStore>
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches>
+    <Watch file="Assets\WorldObject\Building\MeshManager.cs" line="33" offsetX="459" offsetY="34" expression="mesh" liveUpdate="False" />
+  </MonoDevelop.Ide.DebuggingService.PinnedWatches>
+</Properties>
