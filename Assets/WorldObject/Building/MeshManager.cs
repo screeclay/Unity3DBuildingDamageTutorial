@@ -14,6 +14,9 @@ public class MeshManager {//for each meshfilter there should be an distinct mesh
 	float MinimumHeight;
 	float MaximumHeight;
 	
+	private VerticleState meshState;
+	private float time = 0;
+	
 	
 	
 	public MeshManager (ref MeshFilter meshFilter){//constructor
@@ -28,6 +31,7 @@ public class MeshManager {//for each meshfilter there should be an distinct mesh
 	private void Initialise () {
 		Aliases = new List<Verticle>();
 		Triangles = new List<Vector3>();
+		meshState = VerticleState.Standard;
 	}
 	
 	private void ManageVerticles(Vector3[] verticles){//fnction find where many verticles are in the same positions and in that way produces its aliases
@@ -94,6 +98,15 @@ public class MeshManager {//for each meshfilter there should be an distinct mesh
 		UpdateTrianglesList();
 	}
 	
+	public void StartFire(int verticleNumber){
+		if((verticleNumber > Aliases.Count)&&verticleNumber>=0){return;}
+		
+		if(meshState==VerticleState.Standard){
+			Aliases[verticleNumber].StartFire();
+			meshState = VerticleState.Burning;
+		}
+	}
+	
 	public void RemoveTriangle(int k){
 		Vector3 triangleNumbers = Triangles[k];
 		Vector3 aliasNumbers = ChangeVerticleToAlias(triangleNumbers);
@@ -121,6 +134,18 @@ public class MeshManager {//for each meshfilter there should be an distinct mesh
 		UpdateTrianglesList();
 		
 	}
+	
+	public void TellAliasesToUpdate(){
+		if(time>1){
+			for(int k=0; k<Aliases.Count;k++){
+				Aliases[k].Update();
+			}
+			time = 0;
+		}else{
+			time += Time.deltaTime;	
+		}
+	}
+	
 	
 	
 														

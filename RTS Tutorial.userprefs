@@ -1,10 +1,10 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\RTS\Verticle.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\WorldObject\Building\MeshManager.cs">
     <Files>
-      <File FileName="Assets\WorldObject\Building\MeshManager.cs" Line="89" Column="1" />
-      <File FileName="Assets\RTS\Verticle.cs" Line="77" Column="19" />
-      <File FileName="Assets\WorldObject\Building\Building.cs" Line="181" Column="24" />
+      <File FileName="Assets\WorldObject\Building\MeshManager.cs" Line="137" Column="1" />
+      <File FileName="Assets\RTS\Verticle.cs" Line="141" Column="1" />
+      <File FileName="Assets\WorldObject\Building\Building.cs" Line="184" Column="26" />
       <File FileName="Assets\RTS\WorkManager.cs" Line="52" Column="40" />
       <File FileName="Assets\RTS\Enums.cs" Line="4" Column="1" />
     </Files>
@@ -19,7 +19,7 @@
               <Node name="RTS" expanded="True" />
               <Node name="WorldObject" expanded="True">
                 <Node name="Building" expanded="True">
-                  <Node name="WarFactory" selected="True" />
+                  <Node name="MeshManager.cs" selected="True" />
                 </Node>
               </Node>
             </Node>
@@ -36,7 +36,8 @@
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore>
-      <Breakpoint enabled="false" file="D:\Flying\RTS13\RTS Tutorial\Assets\WorldObject\Building\Building.cs" line="174" />
+      <Catchpoint exceptionName="System.InvalidOperationException" />
+      <Catchpoint exceptionName="System.ArgumentOutOfRangeException" />
     </BreakpointStore>
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
   <MonoDevelop.Ide.DebuggingService.PinnedWatches>

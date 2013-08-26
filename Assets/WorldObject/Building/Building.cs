@@ -46,6 +46,9 @@ public class Building : WorldObject {
 		base.Update();
 		ProcessBuildQueue();
 		
+		for(int i=0; i<meshManagers.Count;i++){
+				meshManagers[i].TellAliasesToUpdate();
+		}
 	}
 	
 	protected override void OnGUI() {
@@ -172,13 +175,17 @@ public class Building : WorldObject {
 		meshManagers = new List<MeshManager>();
 		MeshFilter[] myMeshFilters = GetComponentsInChildren<MeshFilter>();
 		for(int i=0; i<myMeshFilters.Length;i++){
-			meshManagers.Add(new MeshManager(ref myMeshFilters[i]));
+			if(myMeshFilters[i].mesh.triangles.Length>0){
+				meshManagers.Add(new MeshManager(ref myMeshFilters[i]));
+			}
 		}
 	}
 	
 	public void FireDamage(){//changing height of every verticle!, going down
 		foreach(MeshManager manager in meshManagers){
-			manager.Destroy(0.02f);
+			//manager.Destroy(0.02f);
+			manager.StartFire(100);
+
 		}
 		/*int j=0;
 		MeshFilter[] myMeshFilters = GetComponentsInChildren<MeshFilter>();

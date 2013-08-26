@@ -14,6 +14,30 @@ namespace RTS{
 		public Vector3 positionRelative;
 		public Vector3 positionAbsolute;
 		
+		private float health;
+		private bool TryingToBeFired = false;
+		
+		public void Update(){
+			if(state == VerticleState.Destroyed){
+				return;
+			}
+			
+			if(health<=0){
+				Destroy();
+				state = VerticleState.Destroyed;
+				return;
+			}
+			
+			if(state == VerticleState.Burning){
+				InflictDamage();
+				TryToFireLinkedAliases();
+			}
+			
+			if(TryingToBeFired&&state != VerticleState.Burning){
+				state = VerticleState.Burning;	
+			}
+				
+		}
 		
 		public Verticle(MeshManager Owner ,int Xnumber, List<int> XAliases, Vector3 XpositionRelative){
 			Initialise();
@@ -30,6 +54,7 @@ namespace RTS{
 			Aliases = new List<int>();
 			state = VerticleState.Standard;
 			positionAbsolute = Vector3.zero;
+			health = 1.0f;
 		}
 		
 		private void SetPositionAbsolute(){
@@ -72,15 +97,16 @@ namespace RTS{
 		}
 		
 		private void Destroy(){
-			foreach(int k in LinkedAliases){//send info to other aliases about breaking links
-				OwnerManager.Aliases[k].RemoveLink(number);
-				RemoveLink(k);
+			for(int i = 0; i<LinkedAliases.Count; i++){
+			//foreach(int k in LinkedAliases){//send info to other aliases about breaking links
+				OwnerManager.Aliases[  LinkedAliases[i]  ].RemoveLink(number);
 				foreach(int l in Triangles){
-					OwnerManager.Aliases[k].RemoveTriangle(l);
+					OwnerManager.Aliases[  LinkedAliases[i]  ].RemoveLink(number);
 				}
+				RemoveLink(  LinkedAliases[i]  );
 			}
 			DestroyTriangles();
-
+			OwnerManager.UpdateTrianglesList();
 		}
 				
 		public void RemoveLink(int k){
@@ -98,6 +124,25 @@ namespace RTS{
 		public void RemoveTriangle(int number){
 			if(Triangles.Contains(number)){
 				Triangles.Remove(number);	
+			}
+		}
+		
+		public void StartFire(){ 
+			if(!TryingToBeFired){
+				TryingToBeFired = true;
+			}
+		}
+		
+		public void InflictDamage(){
+			health -= 0.1f;
+			//Debug.Log("health is :"+health);
+		}
+		
+		public void TryToFireLinkedAliases(){
+			foreach(int k in LinkedAliases){
+				//if(Random.value > 0.8f){
+					OwnerManager.Aliases[k].StartFire();
+				//}
 			}
 		}
 }
