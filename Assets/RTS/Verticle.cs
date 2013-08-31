@@ -8,14 +8,17 @@ namespace RTS{
 		private MeshManager OwnerManager;
 		private VerticleState state;
 		public int number;//my own number of this alias
-		private List<int> Aliases;	
+		public List<int> Aliases;	
 		private List<int> Triangles;
 		private List<int> LinkedAliases;//Aliases of verts with which this vert is making triangles
 		public Vector3 positionRelative;
 		public Vector3 positionAbsolute;
+		public Vector3 normal;
+		public bool DoHaveTwin = false;
 		
 		private float health;
 		private bool TryingToBeFired = false;
+		
 		
 		public void Update(){
 			if(state == VerticleState.Destroyed){
@@ -45,6 +48,9 @@ namespace RTS{
 			number = Xnumber;
 			Aliases = XAliases;
 			positionRelative = XpositionRelative;
+
+			normal = OwnerManager.mesh.normals[Aliases[0]];
+			
 			SetPositionAbsolute();
 		}
 		
@@ -57,7 +63,13 @@ namespace RTS{
 			health = 1.0f;
 		}
 		
-		private void SetPositionAbsolute(){
+		public void AddOffsetToAliases(int offset){
+			for(int i=0; i<Aliases.Count; i++){
+				Aliases[i] += offset;	
+			}
+		}
+		
+		public void SetPositionAbsolute(){
 			positionAbsolute = 	OwnerManager.ParentPosition;
 			positionAbsolute = positionAbsolute + positionRelative;
 			
@@ -135,7 +147,6 @@ namespace RTS{
 		
 		public void InflictDamage(){
 			health -= 0.1f;
-			//Debug.Log("health is :"+health);
 		}
 		
 		public void TryToFireLinkedAliases(){
@@ -145,6 +156,7 @@ namespace RTS{
 				//}
 			}
 		}
+		
 }
 	
 }

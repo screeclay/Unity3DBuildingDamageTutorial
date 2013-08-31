@@ -1,12 +1,14 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\WorldObject\Building\MeshManager.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\RTS\Verticle.cs">
     <Files>
-      <File FileName="Assets\WorldObject\Building\MeshManager.cs" Line="137" Column="1" />
-      <File FileName="Assets\RTS\Verticle.cs" Line="141" Column="1" />
-      <File FileName="Assets\WorldObject\Building\Building.cs" Line="184" Column="26" />
+      <File FileName="Assets\WorldObject\Building\MeshManager.cs" Line="196" Column="1" />
+      <File FileName="Assets\RTS\Verticle.cs" Line="66" Column="1" />
+      <File FileName="Assets\WorldObject\Building\Building.cs" Line="66" Column="1" />
       <File FileName="Assets\RTS\WorkManager.cs" Line="52" Column="40" />
       <File FileName="Assets\RTS\Enums.cs" Line="4" Column="1" />
+      <File FileName="Assets\WorldObject\WorldObject.cs" Line="78" Column="1" />
+      <File FileName="Assets\Player\HUD\HUD.cs" Line="370" Column="1" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
@@ -14,13 +16,13 @@
           <Node name="Assembly-CSharp" expanded="True">
             <Node name="Assets" expanded="True">
               <Node name="Player" expanded="True">
-                <Node name="SelectRectangle" expanded="True" />
+                <Node name="HUD" expanded="True" />
               </Node>
-              <Node name="RTS" expanded="True" />
+              <Node name="RTS" expanded="True">
+                <Node name="Verticle.cs" selected="True" />
+              </Node>
               <Node name="WorldObject" expanded="True">
-                <Node name="Building" expanded="True">
-                  <Node name="MeshManager.cs" selected="True" />
-                </Node>
+                <Node name="Building" expanded="True" />
               </Node>
             </Node>
           </Node>
@@ -38,9 +40,8 @@
     <BreakpointStore>
       <Catchpoint exceptionName="System.InvalidOperationException" />
       <Catchpoint exceptionName="System.ArgumentOutOfRangeException" />
+      <Catchpoint exceptionName="System.IndexOutOfRangeException" />
     </BreakpointStore>
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
-  <MonoDevelop.Ide.DebuggingService.PinnedWatches>
-    <Watch file="Assets\WorldObject\Building\MeshManager.cs" line="33" offsetX="459" offsetY="34" expression="mesh" liveUpdate="False" />
-  </MonoDevelop.Ide.DebuggingService.PinnedWatches>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
 </Properties>

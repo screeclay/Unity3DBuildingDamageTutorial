@@ -59,7 +59,6 @@
      <Compile Include="Assets\ScriptSelectedObjects.cs" />
      <Compile Include="Assets\WorldObject\Building\Building.cs" />
      <Compile Include="Assets\WorldObject\Building\Buildings.cs" />
-     <Compile Include="Assets\WorldObject\Building\House\House.cs" />
      <Compile Include="Assets\WorldObject\Building\MeshManager.cs" />
      <Compile Include="Assets\WorldObject\Building\Refinery\Refinery.cs" />
      <Compile Include="Assets\WorldObject\Building\WarFactory\WarFactory.cs" />
