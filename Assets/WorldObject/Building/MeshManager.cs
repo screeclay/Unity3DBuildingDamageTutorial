@@ -7,6 +7,7 @@ using RTS;
 public class MeshManager {//for each meshfilter there should be an distinct meshManager
 	
 	public Mesh mesh;
+	private MeshFilter filter;
 	public Vector3 ParentPosition;
 	public List<Verticle> Aliases;
 	public int[] VerticleToAliasArray;//the index is vert number, in its there is the number of its alias, its size is the number of veerticles
@@ -19,13 +20,14 @@ public class MeshManager {//for each meshfilter there should be an distinct mesh
 	private float time = 0;
 	float speed = 100f;
 	
-	private bool DoWeMakeDoubleWalls = false;
+	private bool IsMeshThick = false;
 	
 	
 	
 	public MeshManager (ref MeshFilter meshFilter){//constructor
 		Initialise();
 		ParentPosition = meshFilter.transform.position;
+		filter = meshFilter;
 		mesh = meshFilter.mesh;
 		ManageVerticles(mesh.vertices);
 		ManageTriangles(mesh.triangles);
@@ -107,7 +109,7 @@ public class MeshManager {//for each meshfilter there should be an distinct mesh
 	public void StartFire(int verticleNumber){
 
 		MakeMeshThick();
-		
+
 	}
 	
 	public void RemoveTriangle(int k){
@@ -163,76 +165,60 @@ public class MeshManager {//for each meshfilter there should be an distinct mesh
 	}
 	
 	public void MakeMeshThick(){
-		List<Verticle> NewAliases = MakeAliasesTwin(Aliases);
-		List<Vector3> NewTriangles = InvertTrianglesGivingListOfTriangles(Triangles);
-		NewTriangles = AddOffsetToTriangleList(NewTriangles, mesh.vertices.Length);
-		AddTwinsToVerticleToAliasArray();
+		AddTwinsToVerticleArray();
+		AddTwinsToTriangleAlias();
 		
-		for(int i=0; i<Aliases.Count; i++){//lets update the Aliases list by Adding new Aliases
-			Aliases[i].DoHaveTwin = true;//sending info to Alias that it have a twin, Numbers of twins is the number of original aliases
+		Initialise();
+		ManageVerticles(mesh.vertices);
+		ManageTriangles(mesh.triangles);
+		CalcualateMinimumHeight();
+		
+		for(int i=Aliases.Count/2; i<Aliases.Count; i++){
+			Aliases[i].IsATwin = true;
 		}
-		
-		Aliases.AddRange(NewAliases);
-		Triangles.AddRange(NewTriangles);
-
-		UpdateVerticlesList();
-		UpdateTrianglesList();
+		IsMeshThick = true;
 	}
 	
-	
-	private List<Verticle> MakeAliasesTwin(List<Verticle> XAliases){
+	private void AddTwinsToVerticleArray(){
+		Vector3[] OldVerticleList = mesh.vertices;
+		Vector3[] NewVerticleList = new Vector3[OldVerticleList.Length];
+				
 		float Wall_Thickness = 0.005f;
 		Vector3 TargetPosition;
 		Vector3 NewPosition ;
-		int offset = Aliases.Count;
-		List<Verticle> NewAliases = new List<Verticle>();// XAliases;
-		
-		for(int i=0; i<XAliases.Count; i++){
-			TargetPosition = XAliases[i].positionRelative-(XAliases[i].normal);
-			NewPosition = Vector3.MoveTowards(XAliases[i].positionRelative, TargetPosition, Wall_Thickness);
-			NewAliases.Add(new Verticle(this,XAliases[i].number+offset,XAliases[i].Aliases,NewPosition) );//copy an alias
-			NewAliases[i].AddOffsetToAliases(mesh.vertices.Length);
-			
-		}	
-		return NewAliases;
-		
-	} 
-	
-	private void InvertTriangles(Mesh givenMesh = null){
-		if(givenMesh == null){givenMesh = mesh;}
-		givenMesh.triangles = givenMesh.triangles.Reverse().ToArray();
 
+		for(int i=0; i<OldVerticleList.Length; i++){
+			TargetPosition = mesh.vertices[i] - mesh.normals[i];
+			NewPosition = Vector3.MoveTowards(mesh.vertices[i], TargetPosition, Wall_Thickness);
+			NewVerticleList[i] = NewPosition;
+		}
+		
+		Vector3[] final = new Vector3[OldVerticleList.Length + NewVerticleList.Length];
+		OldVerticleList.CopyTo(final, 0);
+		NewVerticleList.CopyTo(final, OldVerticleList.Length);
+		
+		mesh.vertices = final;
 	}
 	
-	private List<Vector3> InvertTrianglesGivingListOfTriangles(List<Vector3> XTriangles = null){
-		if(XTriangles == null){XTriangles = Triangles;}
-		List<Vector3> temp = new List<Vector3>();
-		for(int i=0;i<XTriangles.Count;i++){
-			temp.Add( new Vector3(XTriangles[  i].z,XTriangles[  i].y,XTriangles[ i].x ) );
+	private void AddTwinsToTriangleAlias(){
+		
+		int[] OldTriangleList = mesh.triangles;
+		int[] NewTriangleList = new int [OldTriangleList.Length];
+		int offset = (mesh.vertices.Length/2); 
+		for(int i=0; i<OldTriangleList.Length; i+=3){
+			NewTriangleList[i] = OldTriangleList[ i + 2 ] + offset;
+			NewTriangleList[i+1] = OldTriangleList[ i + 1 ] + offset;
+			NewTriangleList[i+2] = OldTriangleList[ i ] + offset;
 		}
-		return temp;
-	}	
-			
-	private List<Vector3> AddOffsetToTriangleList(List<Vector3> XTriangles, int offset){
-		List<Vector3> Temp = new List<Vector3>();
-		for(int i=0; i<XTriangles.Count; i++){
-			Temp.Add(new Vector3(XTriangles[i].x+offset, XTriangles[i].y+offset, XTriangles[i].z+offset));
-		}
-		return Temp;
+		
+		int[] final = new int[OldTriangleList.Length + NewTriangleList.Length];
+		OldTriangleList.CopyTo(final, 0);
+		NewTriangleList.CopyTo(final, OldTriangleList.Length);
+		
+		mesh.triangles = final;
+		
 	}
 	
-	private void AddTwinsToVerticleToAliasArray(){
-
-		int[] NewVTAA = new int[VerticleToAliasArray.Length];
-		int offset = Aliases.Count;
-		for(int i=0; i<VerticleToAliasArray.Length; i++){
-				NewVTAA[i] = VerticleToAliasArray[i] + offset;
-		}
-		int[] z = new int[VerticleToAliasArray.Length + NewVTAA.Length];
-		VerticleToAliasArray.CopyTo(z, 0);
-		NewVTAA.CopyTo(z, VerticleToAliasArray.Length);
-		VerticleToAliasArray = z;
-	}
 	
 }
 	

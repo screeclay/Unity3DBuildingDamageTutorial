@@ -14,7 +14,7 @@ namespace RTS{
 		public Vector3 positionRelative;
 		public Vector3 positionAbsolute;
 		public Vector3 normal;
-		public bool DoHaveTwin = false;
+		public bool IsATwin = false;
 		
 		private float health;
 		private bool TryingToBeFired = false;
@@ -104,6 +104,12 @@ namespace RTS{
 		
 		public void DestroyByNumber(int numb){
 			if(numb==number){
+				Destroy();	
+			}
+		}
+		
+		public void DestroyBeingTwin(){
+			if(IsATwin == true){
 				Destroy();	
 			}
 		}

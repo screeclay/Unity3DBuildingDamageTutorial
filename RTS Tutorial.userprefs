@@ -1,9 +1,9 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\RTS\Verticle.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\WorldObject\Building\MeshManager.cs">
     <Files>
-      <File FileName="Assets\WorldObject\Building\MeshManager.cs" Line="196" Column="1" />
-      <File FileName="Assets\RTS\Verticle.cs" Line="66" Column="1" />
+      <File FileName="Assets\WorldObject\Building\MeshManager.cs" Line="169" Column="26" />
+      <File FileName="Assets\RTS\Verticle.cs" Line="113" Column="15" />
       <File FileName="Assets\WorldObject\Building\Building.cs" Line="66" Column="1" />
       <File FileName="Assets\RTS\WorkManager.cs" Line="52" Column="40" />
       <File FileName="Assets\RTS\Enums.cs" Line="4" Column="1" />
@@ -18,11 +18,11 @@
               <Node name="Player" expanded="True">
                 <Node name="HUD" expanded="True" />
               </Node>
-              <Node name="RTS" expanded="True">
-                <Node name="Verticle.cs" selected="True" />
-              </Node>
+              <Node name="RTS" expanded="True" />
               <Node name="WorldObject" expanded="True">
-                <Node name="Building" expanded="True" />
+                <Node name="Building" expanded="True">
+                  <Node name="MeshManager.cs" selected="True" />
+                </Node>
               </Node>
             </Node>
           </Node>
