@@ -18,9 +18,9 @@ public class MeshManager {//for each meshfilter there should be an distinct mesh
 	
 	private VerticleState meshState;
 	private float time = 0;
-	float speed = 100f;
+	public int OrgTriangleCount = 0;
 	
-	private bool IsMeshThick = false;
+	public bool IsMeshThick = false;
 	
 	
 	
@@ -29,9 +29,12 @@ public class MeshManager {//for each meshfilter there should be an distinct mesh
 		ParentPosition = meshFilter.transform.position;
 		filter = meshFilter;
 		mesh = meshFilter.mesh;
+
 		ManageVerticles(mesh.vertices);
 		ManageTriangles(mesh.triangles);
 		CalcualateMinimumHeight();
+		MakeMeshThick();
+		//AddTriangleAndVerticles(1,2,3);
 	}
 	
 
@@ -40,6 +43,7 @@ public class MeshManager {//for each meshfilter there should be an distinct mesh
 		Aliases = new List<Verticle>();
 		Triangles = new List<Vector3>();
 		meshState = VerticleState.Standard;
+
 	}
 	
 	private void ManageVerticles(Vector3[] verticles){//fnction find where many verticles are in the same positions and in that way produces its aliases
@@ -65,6 +69,35 @@ public class MeshManager {//for each meshfilter there should be an distinct mesh
 		}
 	}
 	
+	private void ManageVerticlesAddNewUpdateOld(Vector3[] verticles){
+		Dictionary<Vector3, List<int>> TempAliases = new Dictionary<Vector3, List<int>>(); //list of ints are numbers of verticles in the specific position (the Vector3)
+
+		int i = 0;
+		foreach (Vector3 verticle in verticles){
+			if(TempAliases.ContainsKey(verticle)){//we've arleady added a verticle of this position, so the alias will have multiple verticles
+				TempAliases[verticle].Add(i);
+			}else{//we have to add a number of our verticle to our list
+				TempAliases[verticle] = new List<int>();
+				TempAliases[verticle].Add(i);
+			}
+			i++;	
+		}
+		VerticleToAliasArray = new int[i];
+		
+		i = 0;
+		int OrgAliasesCount = Aliases.Count;
+		foreach(var pair in TempAliases){//a Key-Value Pair
+			if(i>OrgAliasesCount-1){//we add a new verticle
+				Aliases.Add (new Verticle(this, i, pair.Value, pair.Key));
+			}else{
+				Aliases[i].Modify(i, pair.Value, pair.Key);	
+			}
+			ManageVerticleToAliasArray(i,pair.Value);
+			i++;
+		}
+	
+	}
+	
 	private void ManageVerticleToAliasArray(int i, List<int> list){//we are trying to fill the Verticle to Alias Array
 		foreach(int k in list){
 			VerticleToAliasArray[k] = i;	
@@ -72,9 +105,11 @@ public class MeshManager {//for each meshfilter there should be an distinct mesh
 	}
 	
 	private void ManageTriangles(int[] triangles){//info about triangles is stored in an array. blblblba
+
 		for(int i=0; i<triangles.Length; i+=3){
 			Triangles.Add(new Vector3(triangles[i], triangles[i+1], triangles[i+2]));//ok, we have a nice list of triangles, what now?
 		}
+
 		
 		int j = 0;
 		foreach(Vector3 vect in Triangles){//we pass info to verticle bout the triangles it particip in
@@ -85,7 +120,7 @@ public class MeshManager {//for each meshfilter there should be an distinct mesh
 		}
 	}
 	
-	private Vector3 ChangeVerticleToAlias(Vector3 vect){
+	public Vector3 ChangeVerticleToAlias(Vector3 vect){
 		Vector3 x = new Vector3(VerticleToAliasArray[(int)vect.x], VerticleToAliasArray[(int)vect.y], VerticleToAliasArray[(int)vect.z]);
 		return x;
 	}
@@ -98,6 +133,19 @@ public class MeshManager {//for each meshfilter there should be an distinct mesh
 		}
 	}
 	
+	public void TranslateFromMeshToManager(){
+		Triangles = new List<Vector3>();
+		ManageVerticlesAddNewUpdateOld(mesh.vertices);
+		ManageTriangles(mesh.triangles);
+		CalcualateMinimumHeight();
+		
+		if(IsMeshThick==true){
+			for(int i=Aliases.Count/2; i<Aliases.Count; i++){
+				Aliases[i].IsATwin = true;
+			}
+		}
+	}
+	
 	public void Destroy (float percent){ 
 		float DestroyHeight	= MaximumHeight -(MaximumHeight - MinimumHeight)*percent;// ParentPosition.y + 0.66f;
 		foreach(Verticle vert in Aliases){
@@ -107,9 +155,7 @@ public class MeshManager {//for each meshfilter there should be an distinct mesh
 	}
 	
 	public void StartFire(int verticleNumber){
-
-		MakeMeshThick();
-
+		Aliases[verticleNumber].StartFire();
 	}
 	
 	public void RemoveTriangle(int k){
@@ -146,15 +192,16 @@ public class MeshManager {//for each meshfilter there should be an distinct mesh
 	}
 	
 	public void DestroyByNumber(int numb){
-		foreach(Verticle vert in Aliases){
-			vert.DestroyByNumber(numb);
-		}
-		UpdateTrianglesList();
+		/*for(int i=0; i<Aliases.Count; i++){
+			Aliases[i].DestroyByNumber(numb);
+		}*/
+		Aliases[numb].DestroyByNumber(numb);
+		//UpdateTrianglesList();
 		
 	}
 	
 	public void TellAliasesToUpdate(){
-		if(time>1){
+		if(time>3){
 			for(int k=0; k<Aliases.Count;k++){
 				Aliases[k].Update();
 			}
@@ -165,14 +212,12 @@ public class MeshManager {//for each meshfilter there should be an distinct mesh
 	}
 	
 	public void MakeMeshThick(){
+		OrgTriangleCount = (mesh.triangles.Length) /3;
+		
 		AddTwinsToVerticleArray();
 		AddTwinsToTriangleAlias();
 		
-		Initialise();
-		ManageVerticles(mesh.vertices);
-		ManageTriangles(mesh.triangles);
-		CalcualateMinimumHeight();
-		
+		TranslateFromMeshToManager();
 		for(int i=Aliases.Count/2; i<Aliases.Count; i++){
 			Aliases[i].IsATwin = true;
 		}
@@ -183,7 +228,7 @@ public class MeshManager {//for each meshfilter there should be an distinct mesh
 		Vector3[] OldVerticleList = mesh.vertices;
 		Vector3[] NewVerticleList = new Vector3[OldVerticleList.Length];
 				
-		float Wall_Thickness = 0.005f;
+		float Wall_Thickness = 0.05f;
 		Vector3 TargetPosition;
 		Vector3 NewPosition ;
 
@@ -201,7 +246,6 @@ public class MeshManager {//for each meshfilter there should be an distinct mesh
 	}
 	
 	private void AddTwinsToTriangleAlias(){
-		
 		int[] OldTriangleList = mesh.triangles;
 		int[] NewTriangleList = new int [OldTriangleList.Length];
 		int offset = (mesh.vertices.Length/2); 
@@ -216,9 +260,25 @@ public class MeshManager {//for each meshfilter there should be an distinct mesh
 		NewTriangleList.CopyTo(final, OldTriangleList.Length);
 		
 		mesh.triangles = final;
-		
 	}
 	
-	
+	public int AddTriangleAndVerticles(int a, int b, int c){//gets 3 numbers of Aliases. Produces a triangle between them, and new verticles
+		Vector3[] OldVerticleList = mesh.vertices;
+		Vector3[] NewVerticleList = new Vector3 [OldVerticleList.Length+3];
+		Vector3 ktk = Aliases[0].positionRelative;
+		Vector3[] LastThreeVerts = new Vector3[3]{Aliases[a].positionRelative,Aliases[b].positionRelative,Aliases[c].positionRelative  };
+		OldVerticleList.CopyTo(NewVerticleList,0);
+		LastThreeVerts.CopyTo(NewVerticleList, OldVerticleList.Length);
+		mesh.vertices = NewVerticleList;
+		
+		
+		int[] OldTriangleList = mesh.triangles;
+		int[] NewTriangleList = new int [OldTriangleList.Length+3];
+		int[] NewTriangle = new int[3]{mesh.vertices.Length-1, mesh.vertices.Length-2, mesh.vertices.Length-3};
+		OldTriangleList.CopyTo(NewTriangleList, 0);
+		NewTriangle.CopyTo(NewTriangleList, OldTriangleList.Length);
+		mesh.triangles = NewTriangleList;
+		return mesh.triangles.Length/3;  //the number of added triangle
+	}
 }
 	

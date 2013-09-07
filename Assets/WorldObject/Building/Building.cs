@@ -184,7 +184,7 @@ public class Building : WorldObject {
 	public void FireDamage(){//changing height of every verticle!, going down
 		foreach(MeshManager manager in meshManagers){
 			//manager.Destroy(0.02f);
-			manager.StartFire(100);
+			manager.StartFire(2);
 
 		}
 		/*int j=0;

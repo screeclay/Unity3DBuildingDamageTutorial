@@ -6,10 +6,10 @@ namespace RTS{
 	public class Verticle {
 		
 		private MeshManager OwnerManager;
-		private VerticleState state;
+		public VerticleState state;
 		public int number;//my own number of this alias
 		public List<int> Aliases;	
-		private List<int> Triangles;
+		public List<int> Triangles;
 		private List<int> LinkedAliases;//Aliases of verts with which this vert is making triangles
 		public Vector3 positionRelative;
 		public Vector3 positionAbsolute;
@@ -48,9 +48,7 @@ namespace RTS{
 			number = Xnumber;
 			Aliases = XAliases;
 			positionRelative = XpositionRelative;
-
 			normal = OwnerManager.mesh.normals[Aliases[0]];
-			
 			SetPositionAbsolute();
 		}
 		
@@ -61,6 +59,17 @@ namespace RTS{
 			state = VerticleState.Standard;
 			positionAbsolute = Vector3.zero;
 			health = 1.0f;
+		}
+		
+		public void Modify(int Xnumber, List<int> XAliases, Vector3 XpositionRelative){  //this updates some elements, but saves ones like health
+			Triangles = new List<int>();		//////Initialisation
+			LinkedAliases = new List<int>();	//
+			
+			number = Xnumber;
+			Aliases = XAliases;
+			positionRelative = XpositionRelative;	
+			normal = OwnerManager.mesh.normals[Aliases[0]];
+			SetPositionAbsolute();
 		}
 		
 		public void AddOffsetToAliases(int offset){
@@ -88,7 +97,9 @@ namespace RTS{
 			CheckIfAddLinkedAlias((int)vert.x);
 			CheckIfAddLinkedAlias((int)vert.y);
 			CheckIfAddLinkedAlias((int)vert.z);
+
 		}
+		
 		
 		private void CheckIfAddLinkedAlias(int x){ 
 			if((!Aliases.Contains(x)) && (!LinkedAliases.Contains(x)) ){
@@ -115,16 +126,26 @@ namespace RTS{
 		}
 		
 		private void Destroy(){
+			//DebEnlightenThisAlias();
+			//DebEnlightenTriangles();
+			//Debug.Log("liAl "+LinkedAliases[0]+" Da angle "+number);
+			
 			for(int i = 0; i<LinkedAliases.Count; i++){
-			//foreach(int k in LinkedAliases){//send info to other aliases about breaking links
 				OwnerManager.Aliases[  LinkedAliases[i]  ].RemoveLink(number);
 				foreach(int l in Triangles){
 					OwnerManager.Aliases[  LinkedAliases[i]  ].RemoveLink(number);
 				}
 				RemoveLink(  LinkedAliases[i]  );
 			}
+			
+			
+			if((OwnerManager.IsMeshThick==true)&&IsATwin==false){
+				OwnerManager.Aliases[number+(OwnerManager.Aliases.Count/2)].Destroy();	
+				ProduceTrianglesBetweenWalls();
+			}
 			DestroyTriangles();
 			OwnerManager.UpdateTrianglesList();
+			
 		}
 				
 		public void RemoveLink(int k){
@@ -136,8 +157,10 @@ namespace RTS{
 			for(int i = 0 ; i<Triangles.Count; i++){
 				int k = Triangles[i];
 				OwnerManager.RemoveTriangle(k);
-			}		
+			}
+			
 		}
+		
 		
 		public void RemoveTriangle(int number){
 			if(Triangles.Contains(number)){
@@ -152,7 +175,7 @@ namespace RTS{
 		}
 		
 		public void InflictDamage(){
-			health -= 0.1f;
+			health -= 0.5f;
 		}
 		
 		public void TryToFireLinkedAliases(){
@@ -161,6 +184,99 @@ namespace RTS{
 					OwnerManager.Aliases[k].StartFire();
 				//}
 			}
+		}
+		
+		private void ProduceTrianglesBetweenWalls(){//fills the void between Alias and its twin
+		
+			int[] TempListOfAliasNumbers= new int[2]{99,99};  //Stores the numbers of other (not this) aliases that form a triangle
+									float[] fx = new float[2];
+			foreach(int k in Triangles){	
+				if(k < OwnerManager.OrgTriangleCount){//This triangle is not a wall triangle
+					Vector3 VertNumbers = OwnerManager.Triangles[k];
+					if(VertNumbers != Vector3.zero){
+						int i = 0;
+						for(int j=0; j<3; j++){
+							
+	
+							float f = VertNumbers[j];
+							if(OwnerManager.VerticleToAliasArray[ (int) f]!= number){
+								fx[i] = f;
+								int z = OwnerManager.VerticleToAliasArray[ (int) f];
+								TempListOfAliasNumbers[i] = z;
+								i++;
+							}
+						}
+						if( (OwnerManager.Aliases[TempListOfAliasNumbers[0]].state != VerticleState.Destroyed) && (OwnerManager.Aliases[TempListOfAliasNumbers[1]].state != VerticleState.Destroyed) ){
+							  OwnerManager.AddTriangleAndVerticles(TempListOfAliasNumbers[0]                               ,TempListOfAliasNumbers[1],  TempListOfAliasNumbers[0] + OwnerManager.Aliases.Count/2)  ;
+							  OwnerManager.AddTriangleAndVerticles(TempListOfAliasNumbers[0] + OwnerManager.Aliases.Count/2,TempListOfAliasNumbers[1],  TempListOfAliasNumbers[0] )  ;
+							  OwnerManager.AddTriangleAndVerticles(TempListOfAliasNumbers[0] + OwnerManager.Aliases.Count/2,TempListOfAliasNumbers[1],  TempListOfAliasNumbers[1] + OwnerManager.Aliases.Count/2)  ;
+							  OwnerManager.AddTriangleAndVerticles(TempListOfAliasNumbers[1] + OwnerManager.Aliases.Count/2,TempListOfAliasNumbers[1],  TempListOfAliasNumbers[0] + OwnerManager.Aliases.Count/2)  ;
+						}
+					}
+				}
+			}
+			OwnerManager.TranslateFromMeshToManager();
+		}
+		
+		private void DebEnlightenAVert(int i, Color col){
+			Vector3 pos = (OwnerManager.mesh.vertices[i] + OwnerManager.ParentPosition);
+			Debug.DrawLine (Vector3.zero, pos, col);
+		}
+		
+		private void DebEnlightenAAlias(int i, Color col){
+			DebEnlightenAPoint(OwnerManager.Aliases[i].positionAbsolute, col); 
+			Debug.Break();
+		}
+		
+		private void DebEnlightenAPoint(Vector3 pos, Color col){
+			Debug.DrawLine (Vector3.zero, pos, col);
+			
+		}
+		 
+		private void DebEnlightenThisAlias(){
+			Vector3 pos = positionAbsolute;
+			Debug.DrawLine (Vector3.zero, pos, Color.red);
+			Debug.Break();
+		}
+		
+		private void DebEnlightenTriangles(){
+			foreach(int i in Triangles){
+ 
+					DebEnlightenAVert((int) OwnerManager.Triangles[i][0],  Color.blue);	
+					DebEnlightenAVert((int) OwnerManager.Triangles[i][1],  Color.blue);
+					DebEnlightenAVert((int) OwnerManager.Triangles[i][2],  Color.blue);
+			}
+			
+		}
+		
+		private void DebEnlightenASpecificTriangle(int i){
+ 
+					DebEnlightenAVert((int) OwnerManager.Triangles[Triangles[i]][0],  Color.blue);	
+					DebEnlightenAVert((int) OwnerManager.Triangles[Triangles[i]][1],  Color.blue);
+					DebEnlightenAVert((int) OwnerManager.Triangles[Triangles[i]][2],  Color.blue);
+					Debug.Break();
+		}
+		
+		private void DebEnlightenLinkedAliases(){
+			foreach(int i in LinkedAliases){
+				DebEnlightenAVert(OwnerManager.Aliases[i].Aliases[0],Color.green);
+			}
+			Debug.Break();
+		}
+		
+		private void DebEnlightenATriangle(int i, Color col){
+			Vector3 vec = OwnerManager.Triangles[Triangles[i]];
+			DebEnlightenAVert((int)vec.x, col);
+			DebEnlightenAVert((int)vec.y, col);
+			DebEnlightenAVert((int)vec.z, col);
+		}
+		
+		public void DebWriteAliases(){
+			string s = "Hi, mine number ist "+number;
+			foreach(int i in Aliases){
+				s +=(" and "+i);	
+			}
+			Debug.Log(s);
 		}
 		
 }
