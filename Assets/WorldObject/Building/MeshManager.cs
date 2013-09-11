@@ -12,6 +12,7 @@ public class MeshManager {//for each meshfilter there should be an distinct mesh
 	public List<Verticle> Aliases;
 	public int[] VerticleToAliasArray;//the index is vert number, in its there is the number of its alias, its size is the number of veerticles
 	public List<Vector3> Triangles;
+	public List<int> WallsWaitingToBeMade;
 	
 	float MinimumHeight;
 	float MaximumHeight;
@@ -22,7 +23,14 @@ public class MeshManager {//for each meshfilter there should be an distinct mesh
 	
 	public bool IsMeshThick = false;
 	
+	public float DebDestroyTime = 0f;
+	public float DebGeneralDestroyTime = 0f;
+	public int DebDestroyCount = 0;
+	public int DebGeneralNumber = 0;
 	
+	public bool MeshWasChanged = false;
+	private int[] TempMeshTrinaglesArray;
+	private Vector3[] TempMeshVerticlesArray;
 	
 	public MeshManager (ref MeshFilter meshFilter){//constructor
 		Initialise();
@@ -43,7 +51,7 @@ public class MeshManager {//for each meshfilter there should be an distinct mesh
 		Aliases = new List<Verticle>();
 		Triangles = new List<Vector3>();
 		meshState = VerticleState.Standard;
-
+		WallsWaitingToBeMade = new List<int>();
 	}
 	
 	private void ManageVerticles(Vector3[] verticles){//fnction find where many verticles are in the same positions and in that way produces its aliases
@@ -138,7 +146,6 @@ public class MeshManager {//for each meshfilter there should be an distinct mesh
 		ManageVerticlesAddNewUpdateOld(mesh.vertices);
 		ManageTriangles(mesh.triangles);
 		CalcualateMinimumHeight();
-		
 		if(IsMeshThick==true){
 			for(int i=Aliases.Count/2; i<Aliases.Count; i++){
 				Aliases[i].IsATwin = true;
@@ -151,22 +158,21 @@ public class MeshManager {//for each meshfilter there should be an distinct mesh
 		foreach(Verticle vert in Aliases){
 			vert.DestroyByHeight(DestroyHeight);
 		}
-		UpdateTrianglesList();
+		;
+
 	}
 	
-	public void StartFire(int verticleNumber){
+	public void FFire(int verticleNumber){
 		Aliases[verticleNumber].StartFire();
 	}
 	
 	public void RemoveTriangle(int k){
-		Vector3 triangleNumbers = Triangles[k];
-		Vector3 aliasNumbers = ChangeVerticleToAlias(triangleNumbers);
 
 		Triangles[k] = Vector3.zero;
 	}
 	
-	public void UpdateTrianglesList(){//gets the in-manager triangle list and then translates it to mesh.triangles format, and then sets it to be the mesh.triangles
-		
+	public void UpdateTrianglesList(){//gets the in-manager triangle list and then translates it to mesh.triangles format, and then sets it to be the mesh.triangles. If mesh.traingles is longer than Traingles*3, writes from 0 to traingles*3, rest of mesh.traingles is left unchanged
+		//Debug.Log("UPL");
 		int LenghtOfTrianglesArray = Triangles.Count*3;
 		int[] tempTrianglesArray = new int[LenghtOfTrianglesArray];
 		int i = 0;
@@ -176,7 +182,12 @@ public class MeshManager {//for each meshfilter there should be an distinct mesh
 			tempTrianglesArray[i+2] = (int)vec.z;
 			i+=3;
 		}
-		mesh.triangles = tempTrianglesArray;
+		int[] tempTrianglesArrayNumber2 = new int[mesh.triangles.Length];
+		mesh.triangles.CopyTo(tempTrianglesArrayNumber2,0);
+		tempTrianglesArray.CopyTo(tempTrianglesArrayNumber2, 0);
+
+		mesh.triangles = tempTrianglesArrayNumber2;
+		//mesh.triangles = tempTrianglesArray;
 	}
 	
 	public void UpdateVerticlesList(){
@@ -192,22 +203,37 @@ public class MeshManager {//for each meshfilter there should be an distinct mesh
 	}
 	
 	public void DestroyByNumber(int numb){
-		/*for(int i=0; i<Aliases.Count; i++){
-			Aliases[i].DestroyByNumber(numb);
-		}*/
-		Aliases[numb].DestroyByNumber(numb);
-		//UpdateTrianglesList();
-		
+		Aliases[numb].DestroyByNumber(numb);		
 	}
 	
-	public void TellAliasesToUpdate(){
-		if(time>3){
+	public void TellAliasesToUpdate(){	
+		
+		DebDestroyCount = 0;
+		DebDestroyTime = 0;
+		
+		
+		if(time>1){
 			for(int k=0; k<Aliases.Count;k++){
 				Aliases[k].Update();
 			}
 			time = 0;
 		}else{
 			time += Time.deltaTime;	
+		}
+		
+
+		if(MeshWasChanged){
+			
+			MakeWallsFromList();
+			UpdateTrianglesList();
+			TranslateFromMeshToManager();
+			MeshWasChanged = false;
+		}
+		
+		if(DebDestroyCount>0){
+			DebGeneralNumber++;
+			DebGeneralDestroyTime += DebDestroyTime;
+			Debug.Log(DebGeneralNumber+" The overall time is "+DebDestroyTime+" And the General time is "+DebGeneralDestroyTime);	
 		}
 	}
 	
@@ -263,22 +289,82 @@ public class MeshManager {//for each meshfilter there should be an distinct mesh
 	}
 	
 	public int AddTriangleAndVerticles(int a, int b, int c){//gets 3 numbers of Aliases. Produces a triangle between them, and new verticles
-		Vector3[] OldVerticleList = mesh.vertices;
-		Vector3[] NewVerticleList = new Vector3 [OldVerticleList.Length+3];
-		Vector3 ktk = Aliases[0].positionRelative;
+		Vector3[] OldVerticleList = TempMeshVerticlesArray;
+		Vector3[] NewVerticleList = new Vector3 [TempMeshVerticlesArray.Length+3];
 		Vector3[] LastThreeVerts = new Vector3[3]{Aliases[a].positionRelative,Aliases[b].positionRelative,Aliases[c].positionRelative  };
 		OldVerticleList.CopyTo(NewVerticleList,0);
-		LastThreeVerts.CopyTo(NewVerticleList, OldVerticleList.Length);
-		mesh.vertices = NewVerticleList;
+		LastThreeVerts.CopyTo(NewVerticleList, TempMeshVerticlesArray.Length);
+		TempMeshVerticlesArray = NewVerticleList;
 		
 		
-		int[] OldTriangleList = mesh.triangles;
-		int[] NewTriangleList = new int [OldTriangleList.Length+3];
-		int[] NewTriangle = new int[3]{mesh.vertices.Length-1, mesh.vertices.Length-2, mesh.vertices.Length-3};
+		int[] OldTriangleList = TempMeshTrinaglesArray;
+		int[] NewTriangleList = new int [TempMeshTrinaglesArray.Length+3];
+		int[] NewTriangle = new int[3]{TempMeshVerticlesArray.Length-1, TempMeshVerticlesArray.Length-2, TempMeshVerticlesArray.Length-3};
 		OldTriangleList.CopyTo(NewTriangleList, 0);
 		NewTriangle.CopyTo(NewTriangleList, OldTriangleList.Length);
-		mesh.triangles = NewTriangleList;
-		return mesh.triangles.Length/3;  //the number of added triangle
+		TempMeshTrinaglesArray = NewTriangleList;
+		return (TempMeshTrinaglesArray.Length/3)-1;  //the number of added triangle
 	}
+	
+	public void AddWallToWallsList(int a, int b, int c){
+		WallsWaitingToBeMade.Add(a);
+		WallsWaitingToBeMade.Add(b);
+		WallsWaitingToBeMade.Add(c);
+	}
+	
+	private void MakeWallsFromList(){//this check if verticles of teoretical Alias are still Ok. If so, sends info to make trinagle from them.
+		TempMeshVerticlesArray = new Vector3[mesh.vertices.Length];
+		mesh.vertices.CopyTo(TempMeshVerticlesArray,0);
+		
+		TempMeshTrinaglesArray = new int[mesh.triangles.Length];
+		mesh.triangles.CopyTo(TempMeshTrinaglesArray,0);
+		
+		float time = Time.realtimeSinceStartup;
+		for(int i=0; i<WallsWaitingToBeMade.Count; i+=3){
+			bool ItIsOk = true;
+			
+			if(WallsWaitingToBeMade[i]<Aliases.Count/2 && (Aliases[WallsWaitingToBeMade[i]].state != VerticleState.Destroyed)){
+			//well, do nothin ,its ok
+			}else{
+				if(WallsWaitingToBeMade[i]>=Aliases.Count/2){//it is a Twin!, so dont have state
+					if(	Aliases[WallsWaitingToBeMade[i]-Aliases.Count/2].state != VerticleState.Destroyed ){//check the Alias
+					//well, do nothin	
+					}else{ItIsOk = false;}
+				}else{ItIsOk = false;}
+			}
+			
+			if(WallsWaitingToBeMade[i+1]<Aliases.Count/2 && (Aliases[WallsWaitingToBeMade[i+1]].state != VerticleState.Destroyed)){
+			//well, do nothin
+			}else{
+				if(WallsWaitingToBeMade[i+1]>=Aliases.Count/2){//it is a Twin!, so dont have state
+					if(	Aliases[WallsWaitingToBeMade[i+1]-Aliases.Count/2].state != VerticleState.Destroyed ){//check the Alias
+					//well, do nothin	
+					}else{ItIsOk = false;}
+				}else{ItIsOk = false;}
+			}
+			
+			if(WallsWaitingToBeMade[i+2]<Aliases.Count/2 && (Aliases[WallsWaitingToBeMade[i+2]].state != VerticleState.Destroyed)){
+			//well, do nothin
+			}else{
+				if(WallsWaitingToBeMade[i+2]>=Aliases.Count/2){//it is a Twin!, so dont have state
+					if(	Aliases[WallsWaitingToBeMade[i+2]-Aliases.Count/2].state != VerticleState.Destroyed ){//check the Alias
+					//well, do nothin	
+					}else{ItIsOk = false;}
+				}else{ItIsOk = false;}
+			}
+			
+			if(ItIsOk == true){
+				AddTriangleAndVerticles(	WallsWaitingToBeMade[i], WallsWaitingToBeMade[i+1], WallsWaitingToBeMade[i+2]);	
+			}
+		}
+			
+		
+		WallsWaitingToBeMade.Clear();
+			mesh.vertices = TempMeshVerticlesArray;
+			mesh.triangles = TempMeshTrinaglesArray;
+		DebDestroyTime += (Time.realtimeSinceStartup - time);
+	}
+	
+
 }
 	

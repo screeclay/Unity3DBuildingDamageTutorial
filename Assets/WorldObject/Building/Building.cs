@@ -183,8 +183,8 @@ public class Building : WorldObject {
 	
 	public void FireDamage(){//changing height of every verticle!, going down
 		foreach(MeshManager manager in meshManagers){
-			//manager.Destroy(0.02f);
-			manager.StartFire(2);
+			//manager.DestroyByNumber(8);
+			manager.FFire(100);
 
 		}
 		/*int j=0;

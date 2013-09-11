@@ -10,6 +10,7 @@ namespace RTS{
 		public int number;//my own number of this alias
 		public List<int> Aliases;	
 		public List<int> Triangles;
+
 		private List<int> LinkedAliases;//Aliases of verts with which this vert is making triangles
 		public Vector3 positionRelative;
 		public Vector3 positionAbsolute;
@@ -126,9 +127,11 @@ namespace RTS{
 		}
 		
 		private void Destroy(){
-			//DebEnlightenThisAlias();
-			//DebEnlightenTriangles();
-			//Debug.Log("liAl "+LinkedAliases[0]+" Da angle "+number);
+			//if(number==100){Debug.Log("Linked Alias is "+LinkedAliases[1]);}
+			OwnerManager.MeshWasChanged = true;
+			
+			float time = 0f;
+			time = Time.realtimeSinceStartup;
 			
 			for(int i = 0; i<LinkedAliases.Count; i++){
 				OwnerManager.Aliases[  LinkedAliases[i]  ].RemoveLink(number);
@@ -144,8 +147,12 @@ namespace RTS{
 				ProduceTrianglesBetweenWalls();
 			}
 			DestroyTriangles();
-			OwnerManager.UpdateTrianglesList();
+			//OwnerManager.UpdateTrianglesList();
 			
+			time =  Time.realtimeSinceStartup - time;
+			//Debug.Log("Time made is "+time);
+			OwnerManager.DebDestroyTime += time;
+			OwnerManager.DebDestroyCount++;
 		}
 				
 		public void RemoveLink(int k){
@@ -154,10 +161,13 @@ namespace RTS{
 		}
 		
 		private void DestroyTriangles(){
+
+
 			for(int i = 0 ; i<Triangles.Count; i++){
 				int k = Triangles[i];
 				OwnerManager.RemoveTriangle(k);
 			}
+
 			
 		}
 		
@@ -188,8 +198,8 @@ namespace RTS{
 		
 		private void ProduceTrianglesBetweenWalls(){//fills the void between Alias and its twin
 		
-			int[] TempListOfAliasNumbers= new int[2]{99,99};  //Stores the numbers of other (not this) aliases that form a triangle
-									float[] fx = new float[2];
+			int[] TempListOfAliasNumbers= new int[2];  //Stores the numbers of other (not this) aliases that form a triangle
+			int DestroyedAliasPosition = 0;
 			foreach(int k in Triangles){	
 				if(k < OwnerManager.OrgTriangleCount){//This triangle is not a wall triangle
 					Vector3 VertNumbers = OwnerManager.Triangles[k];
@@ -197,25 +207,39 @@ namespace RTS{
 						int i = 0;
 						for(int j=0; j<3; j++){
 							
-	
 							float f = VertNumbers[j];
 							if(OwnerManager.VerticleToAliasArray[ (int) f]!= number){
-								fx[i] = f;
 								int z = OwnerManager.VerticleToAliasArray[ (int) f];
 								TempListOfAliasNumbers[i] = z;
 								i++;
-							}
+							}else{ DestroyedAliasPosition = i; }
 						}
 						if( (OwnerManager.Aliases[TempListOfAliasNumbers[0]].state != VerticleState.Destroyed) && (OwnerManager.Aliases[TempListOfAliasNumbers[1]].state != VerticleState.Destroyed) ){
-							  OwnerManager.AddTriangleAndVerticles(TempListOfAliasNumbers[0]                               ,TempListOfAliasNumbers[1],  TempListOfAliasNumbers[0] + OwnerManager.Aliases.Count/2)  ;
-							  OwnerManager.AddTriangleAndVerticles(TempListOfAliasNumbers[0] + OwnerManager.Aliases.Count/2,TempListOfAliasNumbers[1],  TempListOfAliasNumbers[0] )  ;
-							  OwnerManager.AddTriangleAndVerticles(TempListOfAliasNumbers[0] + OwnerManager.Aliases.Count/2,TempListOfAliasNumbers[1],  TempListOfAliasNumbers[1] + OwnerManager.Aliases.Count/2)  ;
-							  OwnerManager.AddTriangleAndVerticles(TempListOfAliasNumbers[1] + OwnerManager.Aliases.Count/2,TempListOfAliasNumbers[1],  TempListOfAliasNumbers[0] + OwnerManager.Aliases.Count/2)  ;
+							AddTriangleInOrder(DestroyedAliasPosition, TempListOfAliasNumbers);
 						}
 					}
 				}
 			}
-			OwnerManager.TranslateFromMeshToManager();
+		}
+		
+		private void AddTriangleInOrder(int DestroyedAliasPosition, int[] TempListOfAliasNumbers){
+			
+			switch (DestroyedAliasPosition){
+				case 0:
+					OwnerManager.AddWallToWallsList(TempListOfAliasNumbers[0] + OwnerManager.Aliases.Count/2,TempListOfAliasNumbers[1], TempListOfAliasNumbers[0])   ;
+					OwnerManager.AddWallToWallsList(TempListOfAliasNumbers[1] + OwnerManager.Aliases.Count/2,TempListOfAliasNumbers[1],  TempListOfAliasNumbers[0] + OwnerManager.Aliases.Count/2)  ;
+					break;
+				case 1: 
+					OwnerManager.AddWallToWallsList(TempListOfAliasNumbers[0]                               ,TempListOfAliasNumbers[1],  TempListOfAliasNumbers[0] + OwnerManager.Aliases.Count/2)  ;
+					OwnerManager.AddWallToWallsList(TempListOfAliasNumbers[0] + OwnerManager.Aliases.Count/2,TempListOfAliasNumbers[1],  TempListOfAliasNumbers[1] + OwnerManager.Aliases.Count/2)  ;
+					break;
+				case 2:
+					OwnerManager.AddWallToWallsList(TempListOfAliasNumbers[0] + OwnerManager.Aliases.Count/2,TempListOfAliasNumbers[1],  TempListOfAliasNumbers[0] )  ;
+					OwnerManager.AddWallToWallsList(TempListOfAliasNumbers[1] + OwnerManager.Aliases.Count/2,TempListOfAliasNumbers[1],  TempListOfAliasNumbers[0] + OwnerManager.Aliases.Count/2)  ;
+					break;	
+
+			}
+
 		}
 		
 		private void DebEnlightenAVert(int i, Color col){
