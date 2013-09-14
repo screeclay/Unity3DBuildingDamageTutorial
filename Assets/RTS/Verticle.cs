@@ -11,7 +11,7 @@ namespace RTS{
 		public List<int> Aliases;	
 		public List<int> Triangles;
 
-		private List<int> LinkedAliases;//Aliases of verts with which this vert is making triangles
+		public List<int> LinkedAliases;//Aliases of verts with which this vert is making triangles
 		public Vector3 positionRelative;
 		public Vector3 positionAbsolute;
 		public Vector3 normal;
@@ -23,6 +23,10 @@ namespace RTS{
 		
 		public void Update(){
 			if(state == VerticleState.Destroyed){
+				return;
+			}
+			
+			if(state == VerticleState.Ground){
 				return;
 			}
 			
@@ -49,7 +53,7 @@ namespace RTS{
 			number = Xnumber;
 			Aliases = XAliases;
 			positionRelative = XpositionRelative;
-			normal = OwnerManager.mesh.normals[Aliases[0]];
+			//normal = OwnerManager.mesh.normals[Aliases[0]];
 			SetPositionAbsolute();
 		}
 		
@@ -87,6 +91,15 @@ namespace RTS{
 		
 		public void SetPositionRelative(Vector3 Pos){
 			Pos = positionRelative;	
+		}
+		
+		public void CalculateNormal(){//calculates the average normal
+			Vector3 TempNormal = Vector3.zero;
+			float HowMany = 0;
+			foreach( int k in Aliases){
+				TempNormal += OwnerManager.mesh.normals[k];
+			}
+			normal = TempNormal/(Aliases.Count);	
 		}
 		
 		public void AddTriangle(int i, Vector3 vert){//vert is a vector with aliases of vector participating in triangle
@@ -189,6 +202,7 @@ namespace RTS{
 		}
 		
 		public void TryToFireLinkedAliases(){
+			//OwnerManager.FireAliasesBySphere(positionRelative);
 			foreach(int k in LinkedAliases){
 				//if(Random.value > 0.8f){
 					OwnerManager.Aliases[k].StartFire();
